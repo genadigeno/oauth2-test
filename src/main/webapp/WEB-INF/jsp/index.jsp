@@ -24,5 +24,6 @@
     <button type="submit">Log in</button>
 </form>
 
+<a href="${request.getContextPath()}/home">Home Page</a>
 </body>
 </html>

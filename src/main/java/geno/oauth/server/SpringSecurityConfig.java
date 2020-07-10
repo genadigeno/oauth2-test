@@ -15,10 +15,19 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.registration.ClientRegistration;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Configuration
 @EnableWebSecurity
 public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
+
+//    private static List<String> clients = Arrays.asList("google", "facebook");
 
     @Autowired
     public UserDetailsService userDetailsService;
@@ -34,9 +43,11 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
             .antMatchers("/", "/login").permitAll()
             .anyRequest().hasRole("USER")
                 //.authenticated()
+            .and().oauth2Login()
+                //.redirectionEndpoint().baseUri("/home").and()
             .and()
-            .formLogin()
-            .loginPage("/login")
+                .formLogin()
+            .loginPage("/login").loginProcessingUrl("/login").defaultSuccessUrl("/home")
             .permitAll()
             .and()
             .logout()
@@ -68,4 +79,14 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
         authenticationProvider.setPasswordEncoder(noopPasswordEncoder());
         return authenticationProvider;
     }
+
+    /*@Bean
+    public ClientRegistrationRepository clientRegistrationRepository(){
+        List<ClientRegistration> registrations = clients.stream()
+                .map(c -> getRegistration(c))
+                .filter(registration -> registration != null)
+                .collect(Collectors.toList());
+
+        return new InMemoryClientRegistrationRepository(registrations);
+    }*/
 }
