@@ -1,6 +1,7 @@
 package geno.oauth.server.security.basic;
 
 import geno.oauth.server.data.UserRepository;
+import geno.oauth.server.models.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -25,6 +26,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String userName) throws UsernameNotFoundException {
-        return new UserDetailsImpl(userRepository.findByUserName(userName));
+        User user = userRepository.findByUserName(userName);
+        return new UserDetailsImpl(user);
     }
 }

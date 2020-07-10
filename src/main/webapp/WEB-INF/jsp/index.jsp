@@ -7,22 +7,23 @@
 </head>
 <body>
 
-<%--<form:form autocomplete="false" method="post" action="${pageContext}/login" modelAttribute="user">
+<%--<form:form autocomplete="false" method="post" action="${pageContext}/login" commandName="">
     <form:input path="username" />
     <form:input path="password" />
     <form:button name="login" value="Log in"/>
 </form:form>--%>
 
-<form method="post" action="${request.getContextPath()}/login" >
-    <label>Username
-        <input name="username" type="text">
+<form action="${request.getContextPath()}/login" method="post">
+    <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
+    <label>User Name
+        <input type="text" name="username" value="user">
     </label>
     <label>Password
-        <input type="password" name="password">
+        <input type="password" name="password" value="password">
     </label>
-
     <button type="submit">Log in</button>
 </form>
 
+<a href="${request.getContextPath()}/home">Home Page</a>
 </body>
 </html>

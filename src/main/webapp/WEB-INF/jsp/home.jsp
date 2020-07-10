@@ -6,9 +6,15 @@
     <title>Title</title>
 </head>
 <body>
-<form method="post" action="${request.getContextPath()}/logout" >
 
-    <button type="submit">Log out</button>
+<%--<form:form action="${pageContext}/logout" method="post">
+    <form:button name="logout" value="logout"/>
+</form:form>--%>
+
+<form action="${request.getContextPath()}/logout" method="post">
+    <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
+    <button type="submit">Log Out</button>
 </form>
+
 </body>
 </html>
