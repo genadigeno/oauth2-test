@@ -6,6 +6,9 @@
     <title>Title</title>
 </head>
 <body>
+<form method="post" action="${request.getContextPath()}/logout" >
 
+    <button type="submit">Log out</button>
+</form>
 </body>
 </html>
