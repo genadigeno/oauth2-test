@@ -25,8 +25,8 @@ public class User {
     @Column(name = "STATUS")
     private Boolean status;
 
-    @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "USER_ID")
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+//    @JoinColumn(name = "USER_ID")
     private List<Role> roles = new ArrayList<Role>();
 
     public List<GrantedAuthority> getGrantedAuthorities(){
