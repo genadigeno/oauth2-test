@@ -55,8 +55,8 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
             .antMatchers("/admin/**").hasRole("ADMIN")
             .and().exceptionHandling().accessDeniedPage("/403")
             .and().oauth2Login()
-                .userInfoEndpoint().oidcUserService(oidUserService()).and().successHandler(oath2AuthenticationSuccessHandler())
-
+                .userInfoEndpoint().oidcUserService(oidUserService())
+                .and().successHandler(oath2AuthenticationSuccessHandler())
             .and().formLogin()
                 .loginPage("/login").loginProcessingUrl("/login").defaultSuccessUrl("/home")
                 .permitAll()
@@ -67,8 +67,7 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     @Override
-    public void configure(AuthenticationManagerBuilder auth) throws Exception {
-//        auth.inMemoryAuthentication().withUser("user").password("{noop}password").roles("USER");
+    public void configure(AuthenticationManagerBuilder auth){
         auth.authenticationProvider(authenticationProvider());
     }
 
@@ -178,4 +177,5 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
             }
         };
     }
+
 }
