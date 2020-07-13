@@ -11,6 +11,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
@@ -18,7 +19,15 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
+import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 
+import javax.servlet.ServletException;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -40,17 +49,18 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.authorizeRequests()
-            .antMatchers("/", "/login").permitAll()
-            .anyRequest().hasRole("USER")
-                //.authenticated()
+            .antMatchers("/", "/login", "/403").permitAll()
+            .antMatchers("/home").hasRole("USER")
+            .antMatchers("/admin/**").hasRole("ADMIN")
+            //.and().exceptionHandling().accessDeniedPage("/403")
             .and().oauth2Login()
                 //.redirectionEndpoint().baseUri("/home").and()
+            .and().formLogin()
+                .loginPage("/login").loginProcessingUrl("/login").defaultSuccessUrl("/home")
+                .permitAll()
             .and()
-                .formLogin()
-            .loginPage("/login").loginProcessingUrl("/login").defaultSuccessUrl("/home")
-            .permitAll()
-            .and()
-            .logout()
+                .logout()
+                .logoutSuccessHandler(logoutSuccessHandler())
             .permitAll();
     }
 
@@ -81,12 +91,35 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     /*@Bean
-    public ClientRegistrationRepository clientRegistrationRepository(){
-        List<ClientRegistration> registrations = clients.stream()
-                .map(c -> getRegistration(c))
-                .filter(registration -> registration != null)
-                .collect(Collectors.toList());
-
-        return new InMemoryClientRegistrationRepository(registrations);
+    public LogoutSuccessHandler logoutSuccessHandler(){
+        return new LogoutSuccessHandler() {
+            @Override
+            public void onLogoutSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
+                new SecurityContextLogoutHandler().logout(request, response, authentication);
+                response.sendRedirect("/");
+            }
+        };
     }*/
+
+
+    @Bean
+    public LogoutSuccessHandler logoutSuccessHandler(){
+        return new LogoutSuccessHandler() {
+            @Override
+            public void onLogoutSuccess(HttpServletRequest request, HttpServletResponse response,
+                                        Authentication authentication) throws IOException, ServletException {
+
+                if (authentication != null && authentication.getDetails() != null) {
+                    try {
+                        request.getSession().invalidate();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                response.setStatus(HttpServletResponse.SC_OK);
+                response.sendRedirect("/");
+            }
+        };
+    }
 }

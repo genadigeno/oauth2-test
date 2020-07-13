@@ -4,6 +4,8 @@
 <html>
 <head>
     <title>Title</title>
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
+    <meta name="google-signin-client_id" content="531089080960-vu0hlmfssab5s9g3qv401dohigc1s64j.apps.googleusercontent.com">
 </head>
 <body>
 
@@ -12,7 +14,8 @@
     <form:input path="password" />
     <form:button name="login" value="Log in"/>
 </form:form>--%>
-
+<div class="g-signin2" data-onsuccess="onSignIn"></div>
+<br>
 <form action="${request.getContextPath()}/login" method="post">
     <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
     <label>User Name

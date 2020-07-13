@@ -11,6 +11,10 @@
     <form:button name="logout" value="logout"/>
 </form:form>--%>
 
+<h3>
+    <a href="${request.getContextPath()}/admin">Admin Panel</a>
+</h3>
+
 <form action="${request.getContextPath()}/logout" method="post">
     <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
     <button type="submit">Log Out</button>
