@@ -1,5 +1,6 @@
 package geno.oauth.server;
 
+import geno.oauth.server.data.UserRepository;
 import geno.oauth.server.models.Role;
 import geno.oauth.server.security.basic.UserGrantedAuthority;
 
@@ -8,6 +9,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -16,6 +18,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.AuthorityUtils;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
@@ -39,13 +43,32 @@ import java.util.*;
 @EnableWebSecurity
 public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
 
+    private UserRepository userRepository;
+
+    public UserDetailsService getUserDetailsService() {
+        return userDetailsService;
+    }
+
     @Autowired
-    public UserDetailsService userDetailsService;
+    public void setUserDetailsService(UserDetailsService userDetailsService) {
+        this.userDetailsService = userDetailsService;
+    }
+
+    private UserDetailsService userDetailsService;
+
+    public UserRepository getUserRepository() {
+        return userRepository;
+    }
+
+    @Autowired
+    @Qualifier("userRepository")
+    public void setUserRepository(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+    //------------------------------------------------------------------------------------------------------------------
 
     @Override
-    public void configure(WebSecurity web) throws Exception {
-        super.configure(web);
-    }
+    public void configure(WebSecurity web) throws Exception { super.configure(web); }
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
@@ -123,8 +146,20 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
                 String userName = authentication.getName();
                 System.out.println("[AuthenticationSuccessHandler] : User = " + userName);
 
-                response.setStatus(HttpServletResponse.SC_OK);
-                response.sendRedirect("/home");
+                if (userRepository.findByUserName(userName) == null){
+                    authentication.setAuthenticated(false);
+                    request.getSession().invalidate();
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.sendRedirect("/");
+                } else {
+
+                    Authentication authManual = new UsernamePasswordAuthenticationToken(userName, null,
+                                                                AuthorityUtils.createAuthorityList("ROLE_USER"));
+                    SecurityContextHolder.getContext().setAuthentication(authManual);
+
+                    response.setStatus(HttpServletResponse.SC_OK);
+                    response.sendRedirect("/home");
+                }
             }
         };
     }
