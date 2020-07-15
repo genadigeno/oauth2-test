@@ -1,17 +1,22 @@
 package geno.oauth.server.controllers;
 
+import geno.oauth.server.oauth2.JwtProvider;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 @Controller
 public class IndexController {
+
+
+    @Autowired
+    private JwtProvider jwtProvider;
 
     @RequestMapping(value = {"/", "/login"}, method = RequestMethod.GET)
     public String index(){
@@ -24,7 +29,10 @@ public class IndexController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         String userName = authentication.getName();
-        System.out.println("user = " + userName);
+
+        /*SecurityContextHolder.getContext().setAuthentication(authentication);
+        String token = jwtProvider.generateJwtToken(authentication);
+        response.setHeader("access_token", token);*/
 
         model.addAttribute("");
         return "home";

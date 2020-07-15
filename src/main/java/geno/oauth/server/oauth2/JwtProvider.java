@@ -1,7 +1,7 @@
 package geno.oauth.server.oauth2;
 
-import geno.oauth.server.security.basic.UserDetailsImpl;
 import io.jsonwebtoken.*;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
@@ -11,19 +11,16 @@ import java.util.Date;
 @Component
 public class JwtProvider {
 
-//    @Value("${grokonez.app.jwtSecret}")
-    private String jwtSecret = "";
+    @Value("${jwt.token.secret.key}")
+    private String jwtSecret;
 
-//    @Value("${grokonez.app.jwtExpiration}")
-    private int jwtExpiration = 7200;
+    @Value("${jwt.token.expiration}")
+    private int jwtExpiration;
 
     public String generateJwtToken(Authentication authentication) {
 
-        UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
-
-
         return Jwts.builder()
-                .setSubject((userPrincipal.getUsername()))
+                .setSubject((authentication.getName()))
                 .setIssuedAt(new Date())
                 .setExpiration(new Date((new Date()).getTime() + jwtExpiration*1000))
                 .signWith(SignatureAlgorithm.HS512, jwtSecret)
@@ -36,7 +33,7 @@ public class JwtProvider {
             String username = getUserNameFromJwtToken(authToken);
             if (response != null && expiresIn15Secs(getExpiration(authToken))){
                 String newToken = generateNewToken(username);
-                response.setHeader("accessToken", newToken);
+                response.setHeader("access_token", newToken);
             }
 
             return true;
@@ -56,8 +53,8 @@ public class JwtProvider {
                     .parseClaimsJws(token)
                     .getBody().getSubject();
         }
-        catch (ExpiredJwtException ignored){
-//            ignored.printStackTrace();
+        catch (ExpiredJwtException e){
+            e.printStackTrace();
         }
 
         return subject;
@@ -82,7 +79,6 @@ public class JwtProvider {
         Date now = new Date();
         Long currentTimeStamp = now.getTime();
         Long tokenExpiration  = date.getTime();
-//        System.err.println((tokenExpiration - currentTimeStamp));
 
         return (tokenExpiration - currentTimeStamp) < 60000;
     }
