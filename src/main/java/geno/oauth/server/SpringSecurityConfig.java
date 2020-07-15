@@ -3,11 +3,11 @@ package geno.oauth.server;
 import geno.oauth.server.data.UserRepository;
 import geno.oauth.server.models.Role;
 import geno.oauth.server.models.User;
+import geno.oauth.server.oauth2.FacebookOAuth2User;
 import geno.oauth.server.security.basic.UserGrantedAuthority;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -17,26 +17,16 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.config.oauth2.client.CommonOAuth2Provider;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.parameters.P;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.client.InMemoryOAuth2AuthorizedClientService;
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
-import org.springframework.security.oauth2.client.registration.ClientRegistration;
-import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
-import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
-import org.springframework.security.oauth2.client.web.AuthorizationRequestRepository;
-import org.springframework.security.oauth2.client.web.HttpSessionOAuth2AuthorizationRequestRepository;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
-import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
@@ -44,7 +34,6 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
 
-import javax.annotation.PostConstruct;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -54,8 +43,6 @@ import java.util.*;
 @Configuration
 @EnableWebSecurity
 public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
-
-    private static List<String> clients = Arrays.asList("google", "facebook");
     //------------------------------------------------------------------------------------------------------------------
 
     private UserRepository userRepository;
@@ -96,6 +83,7 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
             .and().oauth2Login().loginPage("/login")
                 //.clientRegistrationRepository(clientRegistrationRepository())
                 .userInfoEndpoint()
+                //.customUserType(FacebookOAuth2User.class, "facebook")
                 .userService(oAuth2UserService())
                 .oidcUserService(oidUserService())
                 .and().successHandler(oath2AuthenticationSuccessHandler())
@@ -229,11 +217,6 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
         };
     }
 
-    /*@Bean
-    public AuthorizationRequestRepository<OAuth2AuthorizationRequest> authorizationRequestRepository() {
-        return new HttpSessionOAuth2AuthorizationRequestRepository();
-    }*/
-
     @Bean
     public OAuth2UserService<OAuth2UserRequest, OAuth2User> oAuth2UserService(){
         return new OAuth2UserService<OAuth2UserRequest, OAuth2User>() {
@@ -245,81 +228,34 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
                 System.out.println("Token Value:");
                 System.out.println(oAuth2UserRequest.getAccessToken().getTokenValue());
 
+                System.out.print("UserName Attribute Name: ");
+                System.out.println(oAuth2UserRequest.getClientRegistration()
+                        .getProviderDetails().getUserInfoEndpoint().getUserNameAttributeName());
+
+                System.out.print("Scopes: ");
+                System.out.println(oAuth2UserRequest.getAccessToken().getScopes());
+
+                FacebookOAuth2User facebookOAuth2User = new FacebookOAuth2User();
+
                 System.out.println("-----------------------------------------------------------");
                 return new OAuth2User() {
                     @Override
                     public Collection<? extends GrantedAuthority> getAuthorities() {
-                        Role role = new Role();
-                        role.setRole("ROLE_USER");
-                        List<GrantedAuthority> grantedAuthorityList = new ArrayList<GrantedAuthority>();
-                        System.out.println();
-                        grantedAuthorityList.add(new UserGrantedAuthority(role));
-                        return grantedAuthorityList;
+                        return facebookOAuth2User.getAuthorities();
                     }
 
                     @Override
                     public Map<String, Object> getAttributes() {
-                        return oAuth2UserRequest.getAdditionalParameters();
+                        return facebookOAuth2User.getAttributes();
                     }
 
                     @Override
                     public String getName() {
-                        return "username";
+                        return oAuth2UserRequest.getAccessToken().getTokenValue();
                     }
                 };
             }
         };
     }
-    //==================================================================================================================
 
-    /*private static String CLIENT_PROPERTY_KEY = "spring.security.oauth2.client.registration.";
-
-    @Value("${spring.security.oauth2.client.registration.google.client-id}")
-    public String googleClientId;
-    @Value("${spring.security.oauth2.client.registration.google.client-secret}")
-    public String googleSecretKey;
-
-    @Value("${spring.security.oauth2.client.registration.facebook.client-id}")
-    public String facebookClientId;
-    @Value("${spring.security.oauth2.client.registration.facebook.client-secret}")
-    public String facebookSecretKey;
-
-    @PostConstruct
-    public void init(){
-        System.out.println("facebookClientId = " + facebookClientId);
-        System.out.println("googleClientId = " + googleClientId);
-    }
-
-    @Bean
-    public ClientRegistrationRepository clientRegistrationRepository() {
-        List<ClientRegistration> registrations = new ArrayList<ClientRegistration>();
-        registrations.add(getRegistration("facebook"));
-        registrations.add(getRegistration("google"));
-
-        return new InMemoryClientRegistrationRepository(registrations);
-    }
-
-    private ClientRegistration getRegistration(String client) {
-//        String clientId = environment.getProperty(CLIENT_PROPERTY_KEY + client + ".client-id");
-//        String clientSecret = environment.getProperty(CLIENT_PROPERTY_KEY + client + ".client-secret");
-//        if (clientId == null) { return null; }
-        if (client.equals("google")) {
-//            return CommonOAuth2Provider.GOOGLE.getBuilder(client).clientId(googleClientId).clientSecret(googleSecretKey).build();
-            return CommonOAuth2Provider.GOOGLE.getBuilder(client)
-                    .clientId("531089080960-vu0hlmfssab5s9g3qv401dohigc1s64j.apps.googleusercontent.com")
-                    .clientSecret(googleSecretKey).build();
-        }
-        if (client.equals("facebook")) {
-//            return CommonOAuth2Provider.FACEBOOK.getBuilder(client).clientId(facebookClientId).clientSecret(facebookSecretKey).build();
-            return CommonOAuth2Provider.FACEBOOK.getBuilder(client)
-                    .clientId("208223840483753")
-                    .clientSecret(facebookSecretKey).build();
-        }
-        return null;
-    }
-
-    @Bean
-    public OAuth2AuthorizedClientService authorizedClientService() {
-        return new InMemoryOAuth2AuthorizedClientService(clientRegistrationRepository());
-    }*/
 }
