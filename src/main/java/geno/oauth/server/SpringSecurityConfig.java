@@ -20,6 +20,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.oauth2.client.CommonOAuth2Provider;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.parameters.P;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
@@ -32,7 +33,10 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
+import org.springframework.security.oauth2.client.web.AuthorizationRequestRepository;
+import org.springframework.security.oauth2.client.web.HttpSessionOAuth2AuthorizationRequestRepository;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
@@ -91,7 +95,8 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
             .and().exceptionHandling().accessDeniedPage("/403")
             .and().oauth2Login().loginPage("/login")
                 //.clientRegistrationRepository(clientRegistrationRepository())
-                .userInfoEndpoint().userService(oAuth2UserService())
+                .userInfoEndpoint()
+                .userService(oAuth2UserService())
                 .oidcUserService(oidUserService())
                 .and().successHandler(oath2AuthenticationSuccessHandler())
             .and().formLogin()
@@ -179,6 +184,7 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
         return new OAuth2UserService<OidcUserRequest, OidcUser>() {
             @Override
             public OidcUser loadUser(OidcUserRequest oidcUserRequest) throws OAuth2AuthenticationException {
+                System.out.println("<OidcUserRequest, OidcUser>");
                 Map<String, Object> additionalParameters = oidcUserRequest.getAdditionalParameters();
                 Map<String, Object> claims = oidcUserRequest.getIdToken().getClaims();
 
@@ -223,13 +229,23 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
         };
     }
 
+    /*@Bean
+    public AuthorizationRequestRepository<OAuth2AuthorizationRequest> authorizationRequestRepository() {
+        return new HttpSessionOAuth2AuthorizationRequestRepository();
+    }*/
+
     @Bean
     public OAuth2UserService<OAuth2UserRequest, OAuth2User> oAuth2UserService(){
-        System.out.println(1);
         return new OAuth2UserService<OAuth2UserRequest, OAuth2User>() {
             @Override
             public OAuth2User loadUser(OAuth2UserRequest oAuth2UserRequest) throws OAuth2AuthenticationException {
-                System.out.println(2);
+                System.out.println("<OAuth2UserRequest, OAuth2User>");
+                System.out.println("-----------------------------------------------------------");
+
+                System.out.println("Token Value:");
+                System.out.println(oAuth2UserRequest.getAccessToken().getTokenValue());
+
+                System.out.println("-----------------------------------------------------------");
                 return new OAuth2User() {
                     @Override
                     public Collection<? extends GrantedAuthority> getAuthorities() {
