@@ -3,11 +3,13 @@ package geno.oauth.server;
 import geno.oauth.server.data.UserRepository;
 import geno.oauth.server.models.Role;
 import geno.oauth.server.models.User;
-import geno.oauth.server.oauth2.FacebookOAuth2User;
 import geno.oauth.server.security.basic.UserGrantedAuthority;
 
+import net.minidev.json.JSONObject;
+import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -38,6 +40,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.net.URL;
 import java.util.*;
 
 @Configuration
@@ -68,6 +71,8 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
         this.userRepository = userRepository;
     }
 
+    @Value("${oauth2.facebook.user.info.url}")
+    public String facebookUserInfoUrl;
     //------------------------------------------------------------------------------------------------------------------
 
     @Override
@@ -149,9 +154,13 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
             public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
                                                 Authentication authentication) throws IOException, ServletException {
 
-                System.out.println("oath2AuthenticationSuccessHandler() has been called!");
                 String userName = authentication.getName();
-                System.out.println("[AuthenticationSuccessHandler] : User = " + userName);
+
+                String content = IOUtils.toString(new URL(facebookUserInfoUrl + userName));
+                Map<String, String> map = new HashMap<String, String>();
+                map.put("data", content);
+                JSONObject resp = new JSONObject(map);
+                System.out.println("data = " + resp.get("data"));
 
                 User user = userRepository.findByUserName(userName);
                 if (user == null){
@@ -217,6 +226,12 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
         };
     }
 
+    //==================================================================================================================
+
+    @Autowired
+    @Qualifier("facebookOAuth2User")
+    private OAuth2User facebookOAuth2User;
+
     @Bean
     public OAuth2UserService<OAuth2UserRequest, OAuth2User> oAuth2UserService(){
         return new OAuth2UserService<OAuth2UserRequest, OAuth2User>() {
@@ -234,8 +249,6 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
 
                 System.out.print("Scopes: ");
                 System.out.println(oAuth2UserRequest.getAccessToken().getScopes());
-
-                FacebookOAuth2User facebookOAuth2User = new FacebookOAuth2User();
 
                 System.out.println("-----------------------------------------------------------");
                 return new OAuth2User() {
