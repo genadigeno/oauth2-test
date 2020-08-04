@@ -4,6 +4,7 @@
 <html>
 <head>
     <title>Title</title>
+    <link rel="stylesheet" href="./css/login.css">
     <%--<script src="https://apis.google.com/js/platform.js?onload=init" async defer></script>
     <script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_US/sdk.js"></script>
     <meta name="google-signin-client_id" content="531089080960-vu0hlmfssab5s9g3qv401dohigc1s64j.apps.googleusercontent.com">--%>
@@ -23,9 +24,20 @@
 <h3>Login with:</h3>
 
 <p>
-    <a href="/oauth2/authorization/google">Google</a>
+    <a href="/oauth2/authorization/google">
+        <img src="./icons/google.png" alt="google">
+        <span>Google</span>
+    </a>
     <br>
-    <a href="/oauth2/authorization/facebook">Facebook</a>
+    <a href="/oauth2/authorization/facebook">
+        <img src="./icons/facebook.png" alt="facebook">
+        <span>Facebook</span>
+    </a>
+    <br>
+    <a href="/oauth2/authorization/yahoo">
+        <img src="./icons/yahoo.png" alt="facebook">
+        <span>Yahoo</span>
+    </a>
 </p>
 
 <br>

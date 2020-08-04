@@ -156,11 +156,14 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
 
                 String userName = authentication.getName();
 
+
+                /*
+                // TODO: DEFINE WHICH PROVIDER IS
                 String content = IOUtils.toString(new URL(facebookUserInfoUrl + userName));
                 Map<String, String> map = new HashMap<String, String>();
                 map.put("data", content);
                 JSONObject resp = new JSONObject(map);
-                System.out.println("data = " + resp.get("data"));
+                System.out.println("data = " + resp.get("data"));*/
 
                 User user = userRepository.findByUserName(userName);
                 if (user == null){

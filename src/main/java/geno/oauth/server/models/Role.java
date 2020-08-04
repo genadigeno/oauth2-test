@@ -3,7 +3,8 @@ package geno.oauth.server.models;
 import javax.persistence.*;
 
 @Entity
-@Table(name = "ROLES")
+//@Table(name = "ROLES")
+@Table(name = "USER_ROLES")
 public class Role {
 
     @Id
