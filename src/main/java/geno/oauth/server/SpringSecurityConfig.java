@@ -5,8 +5,8 @@ import geno.oauth.server.models.Role;
 import geno.oauth.server.models.User;
 import geno.oauth.server.security.basic.UserGrantedAuthority;
 
-import net.minidev.json.JSONObject;
 import org.apache.commons.io.IOUtils;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -75,6 +75,11 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
     public String facebookUserInfoUrl;
     //------------------------------------------------------------------------------------------------------------------
 
+    @Autowired
+    @Qualifier("facebookOAuth2User")
+    private OAuth2User facebookOAuth2User;
+    //------------------------------------------------------------------------------------------------------------------
+
     @Override
     public void configure(WebSecurity web) throws Exception { super.configure(web); }
 
@@ -86,9 +91,7 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
             .antMatchers("/admin/**").hasRole("ADMIN")
             .and().exceptionHandling().accessDeniedPage("/403")
             .and().oauth2Login().loginPage("/login")
-                //.clientRegistrationRepository(clientRegistrationRepository())
                 .userInfoEndpoint()
-                //.customUserType(FacebookOAuth2User.class, "facebook")
                 .userService(oAuth2UserService())
                 .oidcUserService(oidUserService())
                 .and().successHandler(oath2AuthenticationSuccessHandler())
@@ -156,25 +159,33 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
 
                 String userName = authentication.getName();
 
+                // TODO: DEFINE WHICH PROVIDER IS; ERROR STRING TO CONFIRM EMAIL ON FB
 
-                /*
-                // TODO: DEFINE WHICH PROVIDER IS
-                String content = IOUtils.toString(new URL(facebookUserInfoUrl + userName));
-                Map<String, String> map = new HashMap<String, String>();
-                map.put("data", content);
-                JSONObject resp = new JSONObject(map);
-                System.out.println("data = " + resp.get("data"));*/
+                try {
+                    String content = IOUtils.toString(new URL(facebookUserInfoUrl + userName));
+                    JSONObject resp = new JSONObject(content);
 
-                User user = userRepository.findByUserName(userName);
-                if (user == null){
+                    if (resp.get("email") != null){ userName = resp.get("email").toString(); }
+
+                    User user = userRepository.findByUserName(userName);
+                    if (user == null){
+                        authentication.setAuthenticated(false);
+                        request.getSession().invalidate();
+                        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                        response.sendRedirect("/");
+                    } else {
+                        response.setStatus(HttpServletResponse.SC_OK);
+                        response.sendRedirect("/home");
+                    }
+                } catch (Exception e){
+                    e.printStackTrace();
+
                     authentication.setAuthenticated(false);
                     request.getSession().invalidate();
-                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    response.sendRedirect("/");
-                } else {
-                    response.setStatus(HttpServletResponse.SC_OK);
-                    response.sendRedirect("/home");
+                    response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                    response.sendRedirect("/"); // TODO: ADD ERROR PAGE
                 }
+
             }
         };
     }
@@ -231,29 +242,12 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
 
     //==================================================================================================================
 
-    @Autowired
-    @Qualifier("facebookOAuth2User")
-    private OAuth2User facebookOAuth2User;
-
     @Bean
     public OAuth2UserService<OAuth2UserRequest, OAuth2User> oAuth2UserService(){
         return new OAuth2UserService<OAuth2UserRequest, OAuth2User>() {
             @Override
             public OAuth2User loadUser(OAuth2UserRequest oAuth2UserRequest) throws OAuth2AuthenticationException {
                 System.out.println("<OAuth2UserRequest, OAuth2User>");
-                System.out.println("-----------------------------------------------------------");
-
-                System.out.println("Token Value:");
-                System.out.println(oAuth2UserRequest.getAccessToken().getTokenValue());
-
-                System.out.print("UserName Attribute Name: ");
-                System.out.println(oAuth2UserRequest.getClientRegistration()
-                        .getProviderDetails().getUserInfoEndpoint().getUserNameAttributeName());
-
-                System.out.print("Scopes: ");
-                System.out.println(oAuth2UserRequest.getAccessToken().getScopes());
-
-                System.out.println("-----------------------------------------------------------");
                 return new OAuth2User() {
                     @Override
                     public Collection<? extends GrantedAuthority> getAuthorities() {
