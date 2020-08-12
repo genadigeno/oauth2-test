@@ -7,6 +7,7 @@ import geno.oauth.server.security.basic.UserGrantedAuthority;
 
 import org.apache.commons.io.IOUtils;
 import org.json.JSONObject;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -47,19 +48,7 @@ import java.util.*;
 @EnableWebSecurity
 public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
     //------------------------------------------------------------------------------------------------------------------
-
     private UserRepository userRepository;
-
-    public UserDetailsService getUserDetailsService() {
-        return userDetailsService;
-    }
-
-    @Autowired
-    public void setUserDetailsService(UserDetailsService userDetailsService) {
-        this.userDetailsService = userDetailsService;
-    }
-
-    private UserDetailsService userDetailsService;
 
     public UserRepository getUserRepository() {
         return userRepository;
@@ -69,6 +58,17 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
     @Qualifier("userRepository")
     public void setUserRepository(UserRepository userRepository) {
         this.userRepository = userRepository;
+    }
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    private UserDetailsService userDetailsService;
+
+    public UserDetailsService getUserDetailsService() {
+        return userDetailsService;
+    }
+
+    @Autowired
+    public void setUserDetailsService(UserDetailsService userDetailsService) {
+        this.userDetailsService = userDetailsService;
     }
 
     @Value("${oauth2.facebook.user.info.url}")
@@ -161,31 +161,16 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
 
                 // TODO: DEFINE WHICH PROVIDER IS; ERROR STRING TO CONFIRM EMAIL ON FB
 
-                try {
-                    String content = IOUtils.toString(new URL(facebookUserInfoUrl + userName));
-                    JSONObject resp = new JSONObject(content);
-
-                    if (resp.get("email") != null){ userName = resp.get("email").toString(); }
-
-                    User user = userRepository.findByUserName(userName);
-                    if (user == null){
-                        authentication.setAuthenticated(false);
-                        request.getSession().invalidate();
-                        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                        response.sendRedirect("/");
-                    } else {
-                        response.setStatus(HttpServletResponse.SC_OK);
-                        response.sendRedirect("/home");
-                    }
-                } catch (Exception e){
-                    e.printStackTrace();
-
+                User user = userRepository.findByUserName(userName);
+                if (user == null){
                     authentication.setAuthenticated(false);
                     request.getSession().invalidate();
-                    response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                    response.sendRedirect("/"); // TODO: ADD ERROR PAGE
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.sendRedirect("/");
+                } else {
+                    response.setStatus(HttpServletResponse.SC_OK);
+                    response.sendRedirect("/home");
                 }
-
             }
         };
     }
@@ -196,6 +181,9 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
             @Override
             public OidcUser loadUser(OidcUserRequest oidcUserRequest) throws OAuth2AuthenticationException {
                 System.out.println("<OidcUserRequest, OidcUser>");
+                System.out.println("OOID Client Information: " +
+                        oidcUserRequest.getClientRegistration().getClientName());
+
                 Map<String, Object> additionalParameters = oidcUserRequest.getAdditionalParameters();
                 Map<String, Object> claims = oidcUserRequest.getIdToken().getClaims();
 
@@ -248,6 +236,8 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
             @Override
             public OAuth2User loadUser(OAuth2UserRequest oAuth2UserRequest) throws OAuth2AuthenticationException {
                 System.out.println("<OAuth2UserRequest, OAuth2User>");
+                System.out.println("OAuth2 Client Information: " +
+                        oAuth2UserRequest.getClientRegistration().getClientName());
                 return new OAuth2User() {
                     @Override
                     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -261,7 +251,21 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
 
                     @Override
                     public String getName() {
-                        return oAuth2UserRequest.getAccessToken().getTokenValue();
+                        try {
+                            String accessToken = oAuth2UserRequest.getAccessToken().getTokenValue();
+                            String content = IOUtils.toString(new URL(facebookUserInfoUrl + accessToken));
+                            JSONObject resp = new JSONObject(content);
+
+                            if (resp.get("email") != null) {
+                                return resp.get("email").toString();
+                            } else {
+                                return null;
+                            }
+
+                        } catch (Exception e){
+                            e.printStackTrace();
+                            return null;
+                        }
                     }
                 };
             }

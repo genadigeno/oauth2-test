@@ -23,22 +23,38 @@
 <div id="status"></div>--%>
 <h3>Login with:</h3>
 
-<p>
-    <a href="/oauth2/authorization/google">
-        <img src="./icons/google.png" alt="google">
-        <span>Google</span>
-    </a>
-    <br>
-    <a href="/oauth2/authorization/facebook">
-        <img src="./icons/facebook.png" alt="facebook">
-        <span>Facebook</span>
-    </a>
-    <br>
-    <a href="/oauth2/authorization/yahoo">
-        <img src="./icons/yahoo.png" alt="facebook">
-        <span>Yahoo</span>
-    </a>
-</p>
+<div class="oauth2-block">
+    <div class="google">
+        <a href="/oauth2/authorization/google">
+            <img src="./icons/google.png" alt="google">
+            <span>Google</span>
+        </a>
+    </div>
+    <div class="facebook">
+        <a href="/oauth2/authorization/facebook">
+            <img src="./icons/facebook.png" alt="facebook">
+            <span>Facebook</span>
+        </a>
+    </div>
+    <div class="yahoo">
+        <a href="/oauth2/authorization/yahoo">
+            <img src="./icons/yahoo.png" alt="yahoo">
+            <span>Yahoo</span>
+        </a>
+    </div>
+    <div class="github">
+        <a href="/oauth2/authorization/github">
+            <img src="./icons/github.png" alt="github">
+            <span>GitHub</span>
+        </a>
+    </div>
+    <div class="linkedin">
+        <a href="/oauth2/authorization/linkedin">
+            <img src="./icons/linkedin.png" alt="linkedin">
+            <span>LinkedIn</span>
+        </a>
+    </div>
+</div>
 
 <br>
 

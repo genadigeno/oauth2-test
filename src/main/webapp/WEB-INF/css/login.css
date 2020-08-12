@@ -1,3 +1,83 @@
-img{
-    width: 20px;
+.oauth2-block div{
+    width: 200px;
+    height: 50px;
+    margin-bottom: 5px;
+}
+
+.oauth2-block div a{
+    position: relative;
+}
+
+.oauth2-block div a img{
+    position: absolute;
+    width: 40px;
+    top: 5px;
+    left: 5px;
+}
+
+.oauth2-block div a span{
+    position: absolute;
+    left: 50px;
+    top: 10px;
+    font-size: 25px;
+}
+
+.yahoo{
+    border: 1px solid #720e9e;
+    transition: background-color 0.2s;
+}
+.yahoo:hover{
+    background-color: #f5dfff;
+}
+
+.google{
+    border: 1px solid #399a8f;
+    transition: background-color 0.2s;
+}
+.google:hover{
+    background-color: #dffff9;
+}
+
+.facebook{
+    border: 1px solid #3a559f;
+    transition: background-color 0.2s;
+}
+.facebook:hover{
+    background-color: #dee5f9;
+}
+
+.github{
+    border: 1px solid #000000;
+    transition: background-color 0.2s;
+}
+.github:hover{
+    background-color: rgba(0, 0, 0, 0.15);
+}
+
+.linkedin{
+    border: 1px solid #0a75b5;
+    transition: background-color 0.2s;
+}
+.linkedin:hover{
+    background-color: #ceecff;
+}
+
+.yahoo a{
+    color: #720e9e;
+}
+
+.google a{
+    color: #399a8f;
+}
+
+.facebook a{
+    color: #3a559f;
+}
+
+.github a{
+    color: #000000;
+}
+
+.linkedin a{
+    color: #0a75b5;
 }
