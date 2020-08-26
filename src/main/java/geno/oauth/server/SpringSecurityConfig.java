@@ -3,6 +3,8 @@ package geno.oauth.server;
 import geno.oauth.server.data.UserRepository;
 import geno.oauth.server.models.Role;
 import geno.oauth.server.models.User;
+import geno.oauth.server.oauth2.yahoo.YahooOAuth2User;
+import geno.oauth.server.oauth2.yahoo.YahooRegistrationRepository;
 import geno.oauth.server.security.basic.UserGrantedAuthority;
 
 import org.apache.commons.io.IOUtils;
@@ -78,6 +80,10 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     @Qualifier("facebookOAuth2User")
     private OAuth2User facebookOAuth2User;
+
+    /*@Autowired
+    @Qualifier("yahooRegistrationRepository")
+    private YahooRegistrationRepository yahooRegistrationRepository;*/
     //------------------------------------------------------------------------------------------------------------------
 
     @Override
@@ -85,18 +91,30 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http.authorizeRequests()
+        http
+            .csrf().disable()
+            .authorizeRequests()
             .antMatchers("/", "/login", "/403").permitAll()
             .antMatchers("/home").hasAnyRole("USER", "ADMIN")
             .antMatchers("/admin/**").hasRole("ADMIN")
-            .and().exceptionHandling().accessDeniedPage("/403")
-            .and().oauth2Login().loginPage("/login")
+            .and()
+                .exceptionHandling()
+                .accessDeniedPage("/403")
+            .and()
+                .oauth2Login()
+                .loginPage("/login")
+//                .clientRegistrationRepository(yahooRegistrationRepository)
                 .userInfoEndpoint()
+//                .customUserType(YahooOAuth2User.class, "yahoo")
                 .userService(oAuth2UserService())
                 .oidcUserService(oidUserService())
-                .and().successHandler(oath2AuthenticationSuccessHandler())
-            .and().formLogin()
-                .loginPage("/login").loginProcessingUrl("/login").defaultSuccessUrl("/home")
+                .and()
+                .successHandler(oath2AuthenticationSuccessHandler())
+            .and()
+                .formLogin()
+                .loginPage("/login")
+                .loginProcessingUrl("/authorize")
+                .defaultSuccessUrl("/home")
                 .permitAll()
             .and()
                 .logout()
@@ -155,10 +173,11 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
         return new AuthenticationSuccessHandler() {
             @Override
             public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
-                                                Authentication authentication) throws IOException, ServletException {
+                                                                    Authentication authentication) throws IOException {
 
                 String userName = authentication.getName();
 
+                System.out.println("AuthenticationSuccessHandler oath2AuthenticationSuccessHandler()");
                 // TODO: DEFINE WHICH PROVIDER IS; ERROR STRING TO CONFIRM EMAIL ON FB
 
                 User user = userRepository.findByUserName(userName);

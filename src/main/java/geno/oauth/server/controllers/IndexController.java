@@ -26,6 +26,8 @@ public class IndexController {
     @RequestMapping(value = "/home", method = RequestMethod.GET)
     public String home(Model model, HttpServletRequest request, HttpServletResponse response){
 
+        System.out.println("-----------------------------------------------------------------------------------------");
+
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         String userName = authentication.getName();

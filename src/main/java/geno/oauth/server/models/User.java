@@ -32,6 +32,7 @@ public class User {
     public List<GrantedAuthority> getGrantedAuthorities(){
         List<GrantedAuthority> grantedAuthorityList = new ArrayList<GrantedAuthority>();
         for (Role role: getRoles()){
+//            System.out.println("role.getRole() = " + role.getRole());
             grantedAuthorityList.add(new UserGrantedAuthority(role));
         }
         return grantedAuthorityList;

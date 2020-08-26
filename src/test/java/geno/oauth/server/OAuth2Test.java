@@ -9,8 +9,8 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@PropertySource("classpath:application.properties")
+//@RunWith(SpringJUnit4ClassRunner.class)
+//@PropertySource("classpath:application.properties")
 public class OAuth2Test {
 
     @Autowired
@@ -42,5 +42,14 @@ public class OAuth2Test {
         Assert.assertNotEquals("", googleSecretKey);
         Assert.assertNotEquals("", facebookClientId);
         Assert.assertNotEquals("", facebookSecretKey);
+    }
+
+    @Test
+    public void stringTest(){
+        String s = "fdf, fgh-u";
+
+        for (String j : s.split("\\,")){
+            System.out.println(j);
+        }
     }
 }

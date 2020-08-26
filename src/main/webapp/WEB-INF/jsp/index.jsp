@@ -60,7 +60,7 @@
 
 <h3>Or My Energo:</h3>
 
-<form action="${request.getContextPath()}/login" method="post">
+<form action="${request.getContextPath()}/authorize" method="post">
     <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
     <label>User Name
         <input type="text" name="username" value="user">
