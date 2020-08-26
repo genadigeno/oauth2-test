@@ -4,7 +4,6 @@ import geno.oauth.server.data.UserRepository;
 import geno.oauth.server.models.Role;
 import geno.oauth.server.models.User;
 import geno.oauth.server.oauth2.yahoo.YahooOAuth2User;
-import geno.oauth.server.oauth2.yahoo.YahooRegistrationRepository;
 import geno.oauth.server.security.basic.UserGrantedAuthority;
 
 import org.apache.commons.io.IOUtils;
@@ -82,8 +81,8 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
     private OAuth2User facebookOAuth2User;
 
     /*@Autowired
-    @Qualifier("yahooRegistrationRepository")
-    private YahooRegistrationRepository yahooRegistrationRepository;*/
+    @Qualifier("yahooOAuth2User")
+    private OAuth2User yahooOAuth2User;*/
     //------------------------------------------------------------------------------------------------------------------
 
     @Override
@@ -103,7 +102,7 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
             .and()
                 .oauth2Login()
                 .loginPage("/login")
-//                .clientRegistrationRepository(yahooRegistrationRepository)
+//                .clientRegistrationRepository()
                 .userInfoEndpoint()
 //                .customUserType(YahooOAuth2User.class, "yahoo")
                 .userService(oAuth2UserService())
